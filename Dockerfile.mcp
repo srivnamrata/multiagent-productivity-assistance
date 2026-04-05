@@ -1,0 +1,37 @@
+ARG MCP_SERVER=task
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY backend/ ./backend/
+
+# Create non-root user
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
+ARG MCP_SERVER
+ENV MCP_SERVER=$MCP_SERVER
+ENV MCP_PORT=${MCP_PORT:-8000}
+ENV LOG_LEVEL=INFO
+ENV PYTHONUNBUFFERED=1
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:${MCP_PORT}/health || exit 1
+
+# Run MCP server based on environment variable
+CMD ["python", "-m", "backend.mcp_tools.mcp_server_launcher"]

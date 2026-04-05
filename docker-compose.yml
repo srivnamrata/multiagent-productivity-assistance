@@ -1,0 +1,248 @@
+version: '3.8'
+
+services:
+  # FastAPI Orchestrator
+  orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: orchestrator
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - FIRESTORE_MODE=mock
+      - LOG_LEVEL=INFO
+      - MCP_TASK_HOST=task_mcp
+      - MCP_TASK_PORT=8001
+      - MCP_CALENDAR_HOST=calendar_mcp
+      - MCP_CALENDAR_PORT=8002
+      - MCP_NOTES_HOST=notes_mcp
+      - MCP_NOTES_PORT=8003
+      - MCP_CRITIC_HOST=critic_mcp
+      - MCP_CRITIC_PORT=8004
+      - MCP_AUDITOR_HOST=auditor_mcp
+      - MCP_AUDITOR_PORT=8005
+      - MCP_EVENT_MONITOR_HOST=event_monitor_mcp
+      - MCP_EVENT_MONITOR_PORT=8006
+      - MCP_RESEARCH_HOST=research_mcp
+      - MCP_RESEARCH_PORT=8007
+      - MCP_NEWS_HOST=news_mcp
+      - MCP_NEWS_PORT=8008
+    depends_on:
+      - task_mcp
+      - calendar_mcp
+      - notes_mcp
+      - critic_mcp
+      - auditor_mcp
+      - event_monitor_mcp
+      - research_mcp
+      - news_mcp
+    networks:
+      - multi_agent_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # Task MCP Server
+  task_mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+      args:
+        MCP_SERVER: task
+    container_name: task_mcp
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MCP_SERVER=task
+      - MCP_PORT=8001
+      - LOG_LEVEL=INFO
+    networks:
+      - multi_agent_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # Calendar MCP Server
+  calendar_mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+      args:
+        MCP_SERVER: calendar
+    container_name: calendar_mcp
+    ports:
+      - "8002:8002"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MCP_SERVER=calendar
+      - MCP_PORT=8002
+      - LOG_LEVEL=INFO
+    networks:
+      - multi_agent_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # Notes MCP Server
+  notes_mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+      args:
+        MCP_SERVER: notes
+    container_name: notes_mcp
+    ports:
+      - "8003:8003"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MCP_SERVER=notes
+      - MCP_PORT=8003
+      - LOG_LEVEL=INFO
+    networks:
+      - multi_agent_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # Critic MCP Server
+  critic_mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+      args:
+        MCP_SERVER: critic
+    container_name: critic_mcp
+    ports:
+      - "8004:8004"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MCP_SERVER=critic
+      - MCP_PORT=8004
+      - LOG_LEVEL=INFO
+    networks:
+      - multi_agent_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # Auditor MCP Server
+  auditor_mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+      args:
+        MCP_SERVER: auditor
+    container_name: auditor_mcp
+    ports:
+      - "8005:8005"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MCP_SERVER=auditor
+      - MCP_PORT=8005
+      - LOG_LEVEL=INFO
+    networks:
+      - multi_agent_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # Event Monitor MCP Server
+  event_monitor_mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+      args:
+        MCP_SERVER: event_monitor
+    container_name: event_monitor_mcp
+    ports:
+      - "8006:8006"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MCP_SERVER=event_monitor
+      - MCP_PORT=8006
+      - LOG_LEVEL=INFO
+    networks:
+      - multi_agent_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # Research MCP Server
+  research_mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+      args:
+        MCP_SERVER: research
+    container_name: research_mcp
+    ports:
+      - "8007:8007"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MCP_SERVER=research
+      - MCP_PORT=8007
+      - LOG_LEVEL=INFO
+    networks:
+      - multi_agent_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8007/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # News MCP Server
+  news_mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+      args:
+        MCP_SERVER: news
+    container_name: news_mcp
+    ports:
+      - "8008:8008"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MCP_SERVER=news
+      - MCP_PORT=8008
+      - LOG_LEVEL=INFO
+    networks:
+      - multi_agent_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8008/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+networks:
+  multi_agent_network:
+    driver: bridge
+
+volumes:
+  firestore_data:
+    driver: local

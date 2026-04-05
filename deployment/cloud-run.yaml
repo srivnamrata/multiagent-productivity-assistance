@@ -1,0 +1,249 @@
+# Google Cloud Run Configuration for Multi-Agent Productivity Assistant
+# This file documents the Cloud Run configuration deployed via Terraform
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: productivity-assistant
+  namespace: default
+  labels:
+    app: productivity-assistant
+    version: "1.0.0"
+spec:
+  # Traffic configuration
+  traffic:
+    - latestRevision: true
+      percent: 100
+
+  # Template for the service revision
+  template:
+    metadata:
+      annotations:
+        # Autoscaling configuration
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "100"
+        # Cloud Run specific annotations
+        run.googleapis.com/execution-environment: "gen2"
+        run.googleapis.com/cpu-throttling: "true"
+        run.googleapis.com/startup-cpu-boost: "true"
+      labels:
+        app: productivity-assistant
+        version: "v1"
+
+    spec:
+      # Service account (set via Terraform)
+      serviceAccountName: productivity-assistant-sa
+
+      # Container specification
+      containers:
+        - name: productivity-assistant
+          # Image will be set by Terraform
+          image: "us-central1-docker.pkg.dev/PROJECT_ID/productivity-assistant/productivity-assistant:latest"
+
+          # Port configuration
+          ports:
+            - containerPort: 8000
+              name: http1
+              protocol: TCP
+
+          # Resource requests and limits
+          resources:
+            requests:
+              cpu: "1"       # 1 CPU
+              memory: "1Gi"  # 1GB RAM
+            limits:
+              cpu: "2"       # Max 2 CPU
+              memory: "2Gi"  # Max 2GB RAM
+
+          # Environment variables (set via Terraform)
+          env:
+            # Deployment environment
+            - name: ENVIRONMENT
+              value: "production"
+            - name: PORT
+              value: "8000"
+
+            # GCP Configuration
+            - name: GCP_PROJECT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['run.googleapis.com/project_id']
+            - name: GCP_REGION
+              value: "us-central1"
+
+            # Service switches
+            - name: USE_MOCK_LLM
+              value: "false"
+            - name: USE_MOCK_PUBSUB
+              value: "false"
+            - name: USE_FIRESTORE
+              value: "true"
+
+            # LLM Configuration
+            - name: LLM_MODEL
+              value: "gemini-1.5-pro"
+            - name: VERTEX_AI_LOCATION
+              value: "us-central1"
+            - name: LLM_TEMPERATURE
+              value: "0.7"
+            - name: LLM_MAX_TOKENS
+              value: "2048"
+
+            # Pub/Sub Configuration
+            - name: PUBSUB_TOPIC_PREFIX
+              value: "productivity-assistant"
+            - name: PUBSUB_ACK_DEADLINE_SECONDS
+              value: "60"
+
+            # Logging Configuration
+            - name: ENABLE_CLOUD_LOGGING
+              value: "true"
+            - name: LOG_LEVEL
+              value: "INFO"
+
+            # Monitoring Configuration
+            - name: ENABLE_CLOUD_MONITORING
+              value: "true"
+            - name: ENABLE_CLOUD_TRACE
+              value: "true"
+            - name: TRACE_SAMPLE_RATE
+              value: "0.1"
+
+            # Timeouts
+            - name: REQUEST_TIMEOUT_SECONDS
+              value: "30"
+            - name: LLM_TIMEOUT_SECONDS
+              value: "60"
+            - name: PUBSUB_TIMEOUT_SECONDS
+              value: "10"
+
+          # Probes for health checking
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 2
+
+          # Startup probe for slow-starting applications
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+
+          # Security context
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+
+      # Pod-level settings
+      timeoutSeconds: 300  # 5 minute timeout for requests
+      serviceAccountName: productivity-assistant-sa
+      automountServiceAccountToken: true
+
+---
+# Ingress configuration for Cloud Run
+apiVersion: networking.ingress.gke.io/v1
+kind: Ingress
+metadata:
+  name: productivity-assistant
+  annotations:
+    # SSL certificate
+    networking.gke.io/managed-certificates: productivity-assistant-cert
+    # Load balancer configuration
+    kubernetes.io/ingress.global-static-ip-name: "productivity-assistant-ip"
+    # Cloud Armor (optional)
+    # cloud.google.com/armor-config: |
+    #   {
+    #     "rules": [...]
+    #   }
+
+spec:
+  rules:
+    - host: "productivity-assistant.example.com"  # Replace with actual domain
+      http:
+        paths:
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: productivity-assistant
+                port:
+                  number: 8000
+
+---
+# Managed Certificate for HTTPS
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: productivity-assistant-cert
+spec:
+  domains:
+    - productivity-assistant.example.com  # Replace with actual domain
+
+---
+# Backend Configuration
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: productivity-assistant-backend-config
+spec:
+  # Session affinity
+  sessionAffinity:
+    affinityType: "CLIENT_IP"
+    affinityCookieTtlSec: 3600
+
+  # Identity-aware proxy (IAP) - optional
+  iap:
+    enabled: false
+    # oauth2ClientSecretName: projects/PROJECT_NUMBER/secrets/oauth2-client-secret
+
+  # CDN configuration - optional
+  cdn:
+    enabled: true
+    cachePolicy:
+      includeHost: true
+      includeProtocol: true
+      includeQueryString: false
+      negativeCaching: true
+      negativeCachingPolicy:
+        - code: 404
+          ttlSec: 300
+        - code: 410
+          ttlSec: 300
+    clientTtl: 3600
+    defaultTtl: 3600
+    maxTtl: 86400
+
+  # Connection draining
+  connectionDrainingTimeoutSec: 30
+
+  # Health checks
+  healthChecks:
+    - name: productivity-assistant-healthcheck
+
+  # Custom request headers
+  customRequestHeaders:
+    headers:
+      - "X-Client-Region:{client_region}"
+      - "X-Client-City:{client_city}"

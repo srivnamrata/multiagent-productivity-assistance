@@ -1,0 +1,759 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: multi-agent
+---
+# Orchestrator Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: orchestrator
+  namespace: multi-agent
+  labels:
+    app: orchestrator
+spec:
+  selector:
+    app: orchestrator
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+  type: LoadBalancer
+---
+# Orchestrator Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orchestrator
+  namespace: multi-agent
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: orchestrator
+  template:
+    metadata:
+      labels:
+        app: orchestrator
+    spec:
+      containers:
+      - name: orchestrator
+        image: gcr.io/PROJECT_ID/multi-agent-orchestrator:latest
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: ENVIRONMENT
+          value: production
+        - name: FIRESTORE_MODE
+          value: production
+        - name: PROJECT_ID
+          value: PROJECT_ID
+        - name: MCP_TASK_HOST
+          value: task
+        - name: MCP_CALENDAR_HOST
+          value: calendar
+        - name: MCP_NOTES_HOST
+          value: notes
+        - name: MCP_CRITIC_HOST
+          value: critic
+        - name: MCP_AUDITOR_HOST
+          value: auditor
+        - name: MCP_EVENT_MONITOR_HOST
+          value: event-monitor
+        - name: MCP_RESEARCH_HOST
+          value: research
+        - name: MCP_NEWS_HOST
+          value: news
+        - name: LOG_LEVEL
+          value: INFO
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+      imagePullPolicy: IfNotPresent
+---
+# Task MCP Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: task
+  namespace: multi-agent
+  labels:
+    app: task-mcp
+spec:
+  selector:
+    app: task-mcp
+  ports:
+    - name: http
+      port: 8001
+      targetPort: 8001
+  type: ClusterIP
+---
+# Task MCP Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: task-mcp
+  namespace: multi-agent
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: task-mcp
+  template:
+    metadata:
+      labels:
+        app: task-mcp
+    spec:
+      containers:
+      - name: task-mcp
+        image: gcr.io/PROJECT_ID/multi-agent-task:latest
+        ports:
+        - containerPort: 8001
+          name: http
+        env:
+        - name: MCP_SERVER
+          value: task
+        - name: MCP_PORT
+          value: "8001"
+        - name: FIRESTORE_MODE
+          value: production
+        - name: PROJECT_ID
+          value: PROJECT_ID
+        - name: LOG_LEVEL
+          value: INFO
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8001
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+---
+# Calendar MCP Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: calendar
+  namespace: multi-agent
+  labels:
+    app: calendar-mcp
+spec:
+  selector:
+    app: calendar-mcp
+  ports:
+    - name: http
+      port: 8002
+      targetPort: 8002
+  type: ClusterIP
+---
+# Calendar MCP Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calendar-mcp
+  namespace: multi-agent
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: calendar-mcp
+  template:
+    metadata:
+      labels:
+        app: calendar-mcp
+    spec:
+      containers:
+      - name: calendar-mcp
+        image: gcr.io/PROJECT_ID/multi-agent-calendar:latest
+        ports:
+        - containerPort: 8002
+          name: http
+        env:
+        - name: MCP_SERVER
+          value: calendar
+        - name: MCP_PORT
+          value: "8002"
+        - name: FIRESTORE_MODE
+          value: production
+        - name: PROJECT_ID
+          value: PROJECT_ID
+        - name: LOG_LEVEL
+          value: INFO
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8002
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8002
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+---
+# Notes MCP Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: notes
+  namespace: multi-agent
+  labels:
+    app: notes-mcp
+spec:
+  selector:
+    app: notes-mcp
+  ports:
+    - name: http
+      port: 8003
+      targetPort: 8003
+  type: ClusterIP
+---
+# Notes MCP Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notes-mcp
+  namespace: multi-agent
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: notes-mcp
+  template:
+    metadata:
+      labels:
+        app: notes-mcp
+    spec:
+      containers:
+      - name: notes-mcp
+        image: gcr.io/PROJECT_ID/multi-agent-notes:latest
+        ports:
+        - containerPort: 8003
+          name: http
+        env:
+        - name: MCP_SERVER
+          value: notes
+        - name: MCP_PORT
+          value: "8003"
+        - name: FIRESTORE_MODE
+          value: production
+        - name: PROJECT_ID
+          value: PROJECT_ID
+        - name: LOG_LEVEL
+          value: INFO
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8003
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8003
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+---
+# Critic MCP Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: critic
+  namespace: multi-agent
+  labels:
+    app: critic-mcp
+spec:
+  selector:
+    app: critic-mcp
+  ports:
+    - name: http
+      port: 8004
+      targetPort: 8004
+  type: ClusterIP
+---
+# Critic MCP Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: critic-mcp
+  namespace: multi-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: critic-mcp
+  template:
+    metadata:
+      labels:
+        app: critic-mcp
+    spec:
+      containers:
+      - name: critic-mcp
+        image: gcr.io/PROJECT_ID/multi-agent-critic:latest
+        ports:
+        - containerPort: 8004
+          name: http
+        env:
+        - name: MCP_SERVER
+          value: critic
+        - name: MCP_PORT
+          value: "8004"
+        - name: FIRESTORE_MODE
+          value: production
+        - name: PROJECT_ID
+          value: PROJECT_ID
+        - name: LOG_LEVEL
+          value: INFO
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8004
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8004
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+---
+# Auditor MCP Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: auditor
+  namespace: multi-agent
+  labels:
+    app: auditor-mcp
+spec:
+  selector:
+    app: auditor-mcp
+  ports:
+    - name: http
+      port: 8005
+      targetPort: 8005
+  type: ClusterIP
+---
+# Auditor MCP Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auditor-mcp
+  namespace: multi-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auditor-mcp
+  template:
+    metadata:
+      labels:
+        app: auditor-mcp
+    spec:
+      containers:
+      - name: auditor-mcp
+        image: gcr.io/PROJECT_ID/multi-agent-auditor:latest
+        ports:
+        - containerPort: 8005
+          name: http
+        env:
+        - name: MCP_SERVER
+          value: auditor
+        - name: MCP_PORT
+          value: "8005"
+        - name: FIRESTORE_MODE
+          value: production
+        - name: PROJECT_ID
+          value: PROJECT_ID
+        - name: LOG_LEVEL
+          value: INFO
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8005
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8005
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+---
+# Event Monitor MCP Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: event-monitor
+  namespace: multi-agent
+  labels:
+    app: event-monitor-mcp
+spec:
+  selector:
+    app: event-monitor-mcp
+  ports:
+    - name: http
+      port: 8006
+      targetPort: 8006
+  type: ClusterIP
+---
+# Event Monitor MCP Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-monitor-mcp
+  namespace: multi-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: event-monitor-mcp
+  template:
+    metadata:
+      labels:
+        app: event-monitor-mcp
+    spec:
+      containers:
+      - name: event-monitor-mcp
+        image: gcr.io/PROJECT_ID/multi-agent-event-monitor:latest
+        ports:
+        - containerPort: 8006
+          name: http
+        env:
+        - name: MCP_SERVER
+          value: event_monitor
+        - name: MCP_PORT
+          value: "8006"
+        - name: FIRESTORE_MODE
+          value: production
+        - name: PROJECT_ID
+          value: PROJECT_ID
+        - name: LOG_LEVEL
+          value: INFO
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8006
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8006
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+---
+# Research MCP Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: research
+  namespace: multi-agent
+  labels:
+    app: research-mcp
+spec:
+  selector:
+    app: research-mcp
+  ports:
+    - name: http
+      port: 8007
+      targetPort: 8007
+  type: ClusterIP
+---
+# Research MCP Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: research-mcp
+  namespace: multi-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: research-mcp
+  template:
+    metadata:
+      labels:
+        app: research-mcp
+    spec:
+      containers:
+      - name: research-mcp
+        image: gcr.io/PROJECT_ID/multi-agent-research:latest
+        ports:
+        - containerPort: 8007
+          name: http
+        env:
+        - name: MCP_SERVER
+          value: research
+        - name: MCP_PORT
+          value: "8007"
+        - name: FIRESTORE_MODE
+          value: production
+        - name: PROJECT_ID
+          value: PROJECT_ID
+        - name: LOG_LEVEL
+          value: INFO
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8007
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8007
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+---
+# News MCP Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: news
+  namespace: multi-agent
+  labels:
+    app: news-mcp
+spec:
+  selector:
+    app: news-mcp
+  ports:
+    - name: http
+      port: 8008
+      targetPort: 8008
+  type: ClusterIP
+---
+# News MCP Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: news-mcp
+  namespace: multi-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: news-mcp
+  template:
+    metadata:
+      labels:
+        app: news-mcp
+    spec:
+      containers:
+      - name: news-mcp
+        image: gcr.io/PROJECT_ID/multi-agent-news:latest
+        ports:
+        - containerPort: 8008
+          name: http
+        env:
+        - name: MCP_SERVER
+          value: news
+        - name: MCP_PORT
+          value: "8008"
+        - name: FIRESTORE_MODE
+          value: production
+        - name: PROJECT_ID
+          value: PROJECT_ID
+        - name: LOG_LEVEL
+          value: INFO
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8008
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8008
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+---
+# Horizontal Pod Autoscaler for Orchestrator
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: orchestrator-hpa
+  namespace: multi-agent
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: orchestrator
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+---
+# Network Policy for security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: multi-agent-network-policy
+  namespace: multi-agent
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: multi-agent
+    - podSelector: {}
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: multi-agent
+    ports:
+    - protocol: TCP
+      port: 8001
+    - protocol: TCP
+      port: 8002
+    - protocol: TCP
+      port: 8003
+    - protocol: TCP
+      port: 8004
+    - protocol: TCP
+      port: 8005
+    - protocol: TCP
+      port: 8006
+    - protocol: TCP
+      port: 8007
+    - protocol: TCP
+      port: 8008
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443  # For external APIs
+    - protocol: TCP
+      port: 53   # For DNS

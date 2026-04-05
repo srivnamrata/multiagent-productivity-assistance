@@ -1,0 +1,112 @@
+# Docker Compose Override for Local Development
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+version: '3.9'
+
+services:
+  orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      cache_from:
+        - python:3.11-slim
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=True
+      - LOG_LEVEL=DEBUG
+      - RELOAD=True
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app/backend
+      - ./logs:/app/logs
+    command: python -m uvicorn backend.api.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - multi_agent_network
+
+  task_mcp:
+    environment:
+      - LOG_LEVEL=DEBUG
+      - CACHE_ENABLED=False
+    volumes:
+      - ./backend:/app/backend
+      - ./logs:/app/logs
+
+  calendar_mcp:
+    environment:
+      - LOG_LEVEL=DEBUG
+      - CACHE_ENABLED=False
+    volumes:
+      - ./backend:/app/backend
+      - ./logs:/app/logs
+
+  notes_mcp:
+    environment:
+      - LOG_LEVEL=DEBUG
+      - CACHE_ENABLED=False
+    volumes:
+      - ./backend:/app/backend
+      - ./logs:/app/logs
+
+  critic_mcp:
+    environment:
+      - LOG_LEVEL=DEBUG
+      - CACHE_ENABLED=False
+    volumes:
+      - ./backend:/app/backend
+      - ./logs:/app/logs
+
+  auditor_mcp:
+    environment:
+      - LOG_LEVEL=DEBUG
+      - CACHE_ENABLED=False
+    volumes:
+      - ./backend:/app/backend
+      - ./logs:/app/logs
+
+  event_monitor_mcp:
+    environment:
+      - LOG_LEVEL=DEBUG
+      - CACHE_ENABLED=False
+    volumes:
+      - ./backend:/app/backend
+      - ./logs:/app/logs
+
+  research_mcp:
+    environment:
+      - LOG_LEVEL=DEBUG
+      - CACHE_ENABLED=False
+    volumes:
+      - ./backend:/app/backend
+      - ./logs:/app/logs
+
+  news_mcp:
+    environment:
+      - LOG_LEVEL=DEBUG
+      - CACHE_ENABLED=False
+    volumes:
+      - ./backend:/app/backend
+      - ./logs:/app/logs
+
+  # Optional: Firestore Emulator for local development
+  firebase-emulator:
+    image: google/cloud-firestore-emulator:latest
+    ports:
+      - "8081:8081"
+    command: gcloud beta emulators firestore start --host-port=0.0.0.0:8081
+    networks:
+      - multi_agent_network
+
+  # Optional: Pub/Sub Emulator for local development
+  pubsub-emulator:
+    image: google/cloud-pubsub-emulator:latest
+    ports:
+      - "8085:8085"
+    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085
+    networks:
+      - multi_agent_network
+
+networks:
+  multi_agent_network:
+    driver: bridge

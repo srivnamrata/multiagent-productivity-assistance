@@ -1,0 +1,60 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: multi-agent-productivity
+  namespace: default
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '10'
+        autoscaling.knative.dev/minScale: '1'
+    spec:
+      containerConcurrency: 50
+      containers:
+      - image: gcr.io/[YOUR-PROJECT-ID]/multi-agent-productivity:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: GCP_PROJECT_ID
+          value: "[YOUR-PROJECT-ID]"
+        - name: LLM_MODEL
+          value: "gemini-1.5-pro"
+        - name: USE_MOCK_LLM
+          value: "false"
+        - name: USE_FIRESTORE
+          value: "true"
+        - name: USE_MOCK_PUBSUB
+          value: "false"
+        - name: CRITIC_AGENT_ENABLED
+          value: "true"
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+---
+apiVersion: autoscaling.internal.knative.dev/v1alpha1
+kind: PodAutoscaler
+metadata:
+  name: multi-agent-productivity-pa
+  namespace: default
+spec:
+  scaleTargetRef:
+    name: multi-agent-productivity
+  minScale: 1
+  maxScale: 10
+  metrics:
+  - type: Concurrency
+    concurrency:
+      targetUtilization: 0.7
