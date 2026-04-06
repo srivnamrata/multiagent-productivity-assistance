@@ -34,8 +34,7 @@ async def launch_mcp_server():
     
     # Get configuration from environment
     server_type = os.getenv("MCP_SERVER", "task").lower()
-    port = int(os.getenv("MCP_PORT", "8000"))
-    
+    port = int(os.getenv("PORT", os.getenv("MCP_PORT", "8080")))
     logger.info(f"Starting MCP Server: {server_type} on port {port}")
     
     try:
