@@ -9,12 +9,13 @@ import asyncio
 import logging
 from typing import Optional, List, Dict, Any
 
-from base_mcp_server import BaseMCPServer, MCPServerConfig
-from utils import log_operation
+from .base_mcp_server import BaseMCPServer, MCPServerConfig
+from .utils import log_operation
 
 # Import the existing TaskAgent
 import sys
-sys.path.insert(0, '../agents')
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../agents'))
 from task_agent import TaskAgent
 
 logger = logging.getLogger(__name__)
