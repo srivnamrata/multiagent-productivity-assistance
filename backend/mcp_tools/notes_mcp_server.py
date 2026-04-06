@@ -9,8 +9,8 @@ import asyncio
 import logging
 from typing import Optional, List, Dict, Any
 
-from base_mcp_server import BaseMCPServer, MCPServerConfig
-from utils import log_operation
+from .base_mcp_server import BaseMCPServer, MCPServerConfig
+from .utils import log_operation
 
 # Import the existing NotesAgent
 import sys
