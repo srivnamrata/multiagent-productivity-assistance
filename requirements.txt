@@ -4,9 +4,8 @@ pydantic==2.4.2
 python-dotenv==1.0.0
 google-cloud-pubsub==2.18.4
 google-cloud-firestore==2.13.0
-google-cloud-vertex-ai==1.34.0
+google-cloud-aiplatform>=1.49.0
 google-auth==2.25.2
-asyncio==3.4.3
 python-json-logger==2.0.7
 pytest==7.4.3
 pytest-asyncio==0.21.1

@@ -5,8 +5,6 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/multi-agent-orchestrator:$COMMIT_SHA'
-      - '-t'
       - 'gcr.io/$PROJECT_ID/multi-agent-orchestrator:latest'
       - '-f'
       - 'Dockerfile'
@@ -18,7 +16,7 @@ steps:
     id: 'push-orchestrator'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/multi-agent-orchestrator:$COMMIT_SHA'
+      - 'gcr.io/$PROJECT_ID/multi-agent-orchestrator:latest'
     waitFor: ['build-orchestrator']
 
   # Step 3: Build Task MCP Server
@@ -26,8 +24,6 @@ steps:
     id: 'build-task-mcp'
     args:
       - 'build'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/multi-agent-task:$COMMIT_SHA'
       - '-t'
       - 'gcr.io/$PROJECT_ID/multi-agent-task:latest'
       - '-f'
@@ -41,7 +37,7 @@ steps:
     id: 'push-task-mcp'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/multi-agent-task:$COMMIT_SHA'
+      - 'gcr.io/$PROJECT_ID/multi-agent-task:latest'
     waitFor: ['build-task-mcp']
 
   # Step 5: Build Calendar MCP Server
@@ -49,8 +45,6 @@ steps:
     id: 'build-calendar-mcp'
     args:
       - 'build'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/multi-agent-calendar:$COMMIT_SHA'
       - '-t'
       - 'gcr.io/$PROJECT_ID/multi-agent-calendar:latest'
       - '-f'
@@ -64,7 +58,7 @@ steps:
     id: 'push-calendar-mcp'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/multi-agent-calendar:$COMMIT_SHA'
+      - 'gcr.io/$PROJECT_ID/multi-agent-calendar:latest'
     waitFor: ['build-calendar-mcp']
 
   # Step 7: Build Notes MCP Server
@@ -72,8 +66,6 @@ steps:
     id: 'build-notes-mcp'
     args:
       - 'build'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/multi-agent-notes:$COMMIT_SHA'
       - '-t'
       - 'gcr.io/$PROJECT_ID/multi-agent-notes:latest'
       - '-f'
@@ -87,7 +79,7 @@ steps:
     id: 'push-notes-mcp'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/multi-agent-notes:$COMMIT_SHA'
+      - 'gcr.io/$PROJECT_ID/multi-agent-notes:latest'
     waitFor: ['build-notes-mcp']
 
   # Step 9: Build Critic MCP Server
@@ -95,8 +87,6 @@ steps:
     id: 'build-critic-mcp'
     args:
       - 'build'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/multi-agent-critic:$COMMIT_SHA'
       - '-t'
       - 'gcr.io/$PROJECT_ID/multi-agent-critic:latest'
       - '-f'
@@ -110,7 +100,7 @@ steps:
     id: 'push-critic-mcp'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/multi-agent-critic:$COMMIT_SHA'
+      - 'gcr.io/$PROJECT_ID/multi-agent-critic:latest'
     waitFor: ['build-critic-mcp']
 
   # Step 11: Build Auditor MCP Server
@@ -118,8 +108,6 @@ steps:
     id: 'build-auditor-mcp'
     args:
       - 'build'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/multi-agent-auditor:$COMMIT_SHA'
       - '-t'
       - 'gcr.io/$PROJECT_ID/multi-agent-auditor:latest'
       - '-f'
@@ -133,7 +121,7 @@ steps:
     id: 'push-auditor-mcp'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/multi-agent-auditor:$COMMIT_SHA'
+      - 'gcr.io/$PROJECT_ID/multi-agent-auditor:latest'
     waitFor: ['build-auditor-mcp']
 
   # Step 13: Build Event Monitor MCP Server
@@ -141,8 +129,6 @@ steps:
     id: 'build-event-monitor-mcp'
     args:
       - 'build'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/multi-agent-event-monitor:$COMMIT_SHA'
       - '-t'
       - 'gcr.io/$PROJECT_ID/multi-agent-event-monitor:latest'
       - '-f'
@@ -156,7 +142,7 @@ steps:
     id: 'push-event-monitor-mcp'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/multi-agent-event-monitor:$COMMIT_SHA'
+      - 'gcr.io/$PROJECT_ID/multi-agent-event-monitor:latest'
     waitFor: ['build-event-monitor-mcp']
 
   # Step 15: Build Research MCP Server
@@ -164,8 +150,6 @@ steps:
     id: 'build-research-mcp'
     args:
       - 'build'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/multi-agent-research:$COMMIT_SHA'
       - '-t'
       - 'gcr.io/$PROJECT_ID/multi-agent-research:latest'
       - '-f'
@@ -179,7 +163,7 @@ steps:
     id: 'push-research-mcp'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/multi-agent-research:$COMMIT_SHA'
+      - 'gcr.io/$PROJECT_ID/multi-agent-research:latest'
     waitFor: ['build-research-mcp']
 
   # Step 17: Build News MCP Server
@@ -187,8 +171,6 @@ steps:
     id: 'build-news-mcp'
     args:
       - 'build'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/multi-agent-news:$COMMIT_SHA'
       - '-t'
       - 'gcr.io/$PROJECT_ID/multi-agent-news:latest'
       - '-f'
@@ -202,42 +184,34 @@ steps:
     id: 'push-news-mcp'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/multi-agent-news:$COMMIT_SHA'
+      - 'gcr.io/$PROJECT_ID/multi-agent-news:latest'
     waitFor: ['build-news-mcp']
 
-  # Step 19: Deploy Orchestrator
-  - name: 'gcr.io/cloud-builders/gke-deploy'
+  # Step 19: Deploy Orchestrator to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
     id: 'deploy-orchestrator'
     args:
-      - '-f=.'
-      - '-i=gcr.io/$PROJECT_ID/multi-agent-orchestrator:$COMMIT_SHA'
-      - '-l=app=multi-agent-orchestrator'
-      - '-L=gs://cloud-builders-gke-deploy'
-      - '-n=default'
-      - '-o=/workspace/output'
-    env:
-      - 'CLOUDSDK_COMPUTE_REGION=us-central1'
-      - 'CLOUDSDK_CONTAINER_CLUSTER=multi-agent-cluster'
+      - 'run'
+      - 'deploy'
+      - 'multi-agent-orchestrator'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/multi-agent-orchestrator:latest'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
     waitFor: ['push-orchestrator']
 
 images:
-  - 'gcr.io/$PROJECT_ID/multi-agent-orchestrator:$COMMIT_SHA'
   - 'gcr.io/$PROJECT_ID/multi-agent-orchestrator:latest'
-  - 'gcr.io/$PROJECT_ID/multi-agent-task:$COMMIT_SHA'
   - 'gcr.io/$PROJECT_ID/multi-agent-task:latest'
-  - 'gcr.io/$PROJECT_ID/multi-agent-calendar:$COMMIT_SHA'
   - 'gcr.io/$PROJECT_ID/multi-agent-calendar:latest'
-  - 'gcr.io/$PROJECT_ID/multi-agent-notes:$COMMIT_SHA'
   - 'gcr.io/$PROJECT_ID/multi-agent-notes:latest'
-  - 'gcr.io/$PROJECT_ID/multi-agent-critic:$COMMIT_SHA'
   - 'gcr.io/$PROJECT_ID/multi-agent-critic:latest'
-  - 'gcr.io/$PROJECT_ID/multi-agent-auditor:$COMMIT_SHA'
   - 'gcr.io/$PROJECT_ID/multi-agent-auditor:latest'
-  - 'gcr.io/$PROJECT_ID/multi-agent-event-monitor:$COMMIT_SHA'
   - 'gcr.io/$PROJECT_ID/multi-agent-event-monitor:latest'
-  - 'gcr.io/$PROJECT_ID/multi-agent-research:$COMMIT_SHA'
   - 'gcr.io/$PROJECT_ID/multi-agent-research:latest'
-  - 'gcr.io/$PROJECT_ID/multi-agent-news:$COMMIT_SHA'
   - 'gcr.io/$PROJECT_ID/multi-agent-news:latest'
 
 options:

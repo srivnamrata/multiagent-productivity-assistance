@@ -5,44 +5,42 @@ Critical for the Critic Agent to understand context and detect inefficiencies.
 """
 
 import json
-from typing import Dict, List, Any, Set, Optional
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, asdict
 from datetime import datetime
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 
 
+
 @dataclass
 class Node:
-    """Graph node representing an entity"""
     id: str
-    node_type: str  # "task", "goal", "schedule", "note", "person", "project"
+    node_type: str
     label: str
     attributes: Dict[str, Any]
     created_at: str = None
-    
+
     def __post_init__(self):
         if not self.created_at:
-            self.created_at = datetime.now().isoformat()
-
+            self.created_at = datetime.utcnow().isoformat()
 
 @dataclass
 class Edge:
-    """Graph edge representing relationships"""
     source_id: str
     target_id: str
-    relationship_type: str  # "depends_on", "related_to", "blocks", "achieves", "assigned_to"
-    confidence: float  # 0.0-1.0
+    relationship_type: str
+    confidence: float
     metadata: Dict[str, Any] = None
     created_at: str = None
-    
+
     def __post_init__(self):
         if not self.created_at:
-            self.created_at = datetime.now().isoformat()
+            self.created_at = datetime.utcnow().isoformat()
         if self.metadata is None:
             self.metadata = {}
-
 
 class KnowledgeGraphService:
     """
@@ -54,32 +52,51 @@ class KnowledgeGraphService:
     - Understand user goals and priorities
     """
     
+
     def __init__(self, firestore_client):
         self.firestore = firestore_client
-        self.nodes: Dict[str, Node] = {}  # id -> Node
+
+        # In‑memory graph (always available)
+        self.nodes: Dict[str, Node] = {}
         self.edges: List[Edge] = []
-        self.load_from_database()
-    
-    async def add_node(self, node_id: str, node_type: str, label: str, 
-                      attributes: Dict[str, Any]) -> Node:
-        """Add a node to the knowledge graph"""
-        node = Node(
-            id=node_id,
-            node_type=node_type,
-            label=label,
-            attributes=attributes
-        )
+
+        # Safe load
+        try:
+            if self.firestore:
+                asyncio.create_task(self.load_from_database())
+        except RuntimeError:
+            # Running outside event loop (startup)
+            pass
+
+    # -----------------------------------------------------
+    # ✅ Safe Firestore Write Helper
+    # -----------------------------------------------------
+    async def _safe_firestore_write(self, collection: str, doc_id: str, data: dict):
+        if not self.firestore:
+            logger.warning("⚠️ Firestore disabled — skipping persistence.")
+            return
+
+        try:
+            await self.firestore.collection(collection).document(doc_id).set(data)
+            logger.info(f"✅ Firestore persisted: {collection}/{doc_id}")
+        except Exception as e:
+            logger.error(f"❌ Firestore write failed: {e}")
+
+
+    async def add_node(self, node_id: str, node_type: str, label: str, attributes: Dict[str, Any]) -> Node:
+        node = Node(id=node_id, node_type=node_type, label=label, attributes=attributes)
         self.nodes[node_id] = node
-        
-        # Persist to Firestore
-        await self.firestore.collection("knowledge_graph").document(node_id).set(asdict(node))
-        
-        logger.info(f"Added node: {node_id} ({node_type})")
+
+        await self._safe_firestore_write(
+            "knowledge_graph",
+            node_id,
+            asdict(node)
+        )
+
         return node
+
     
-    async def add_edge(self, source_id: str, target_id: str, 
-                      relationship_type: str, metadata: Dict = None) -> Edge:
-        """Add an edge (relationship) to the knowledge graph"""
+    async def add_edge(self, source_id: str, target_id: str, relationship_type: str, metadata: Dict = None) -> Edge:
         edge = Edge(
             source_id=source_id,
             target_id=target_id,
@@ -87,15 +104,17 @@ class KnowledgeGraphService:
             confidence=0.9,
             metadata=metadata or {}
         )
+
         self.edges.append(edge)
-        
-        # Persist to Firestore
-        await self.firestore.collection("knowledge_graph_edges").document(
-            f"{source_id}-{target_id}-{relationship_type}"
-        ).set(asdict(edge))
-        
-        logger.info(f"Added edge: {source_id} --{relationship_type}--> {target_id}")
+
+        await self._safe_firestore_write(
+            "knowledge_graph_edges",
+            f"{source_id}-{target_id}-{relationship_type}",
+            asdict(edge)
+        )
+
         return edge
+
     
     def get_node(self, node_id: str) -> Optional[Node]:
         """Retrieve a node from the graph"""

@@ -34,6 +34,22 @@ app = FastAPI(
 # Load configuration
 config = get_config()
 
+
+
+firestore_client = None
+
+if config.USE_FIRESTORE:
+    try:
+        from google.cloud import firestore
+        firestore_client = firestore.AsyncClient(project=config.GCP_PROJECT_ID)
+        logger.info("✅ Firestore client initialized (AsyncClient).")
+    except Exception as e:
+        logger.error(f"❌ Firestore failed to initialize: {e}")
+        firestore_client = None
+else:
+    logger.info("ℹ️ Firestore disabled in current environment.")
+
+
 # Initialize services
 llm_service = create_llm_service(
     use_mock=config.USE_MOCK_LLM,
@@ -46,7 +62,8 @@ pubsub_service = create_pubsub_service(
     project_id=config.GCP_PROJECT_ID
 )
 
-knowledge_graph = KnowledgeGraphService(firestore_client=None)
+
+knowledge_graph = KnowledgeGraphService(firestore_client=firestore_client)
 
 # Initialize agents
 critic_agent = CriticAgent(llm_service, knowledge_graph, pubsub_service)
