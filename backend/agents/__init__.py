@@ -5,7 +5,7 @@ from .calendar_agent import CalendarAgent
 from .notes_agent import NotesAgent
 from .scheduler_agent import SchedulerAgent
 from .critic_agent import CriticAgent
-from .auditor_agent import AuditorAgent
+from .auditor_agent import SecurityAuditorAgent
 from .knowledge_agent import KnowledgeAgent
 
 __all__ = [
@@ -16,6 +16,6 @@ __all__ = [
     'NotesAgent',
     'SchedulerAgent',
     'CriticAgent',
-    'AuditorAgent',
+    'SecurityAuditorAgent',
     'KnowledgeAgent',
 ]
